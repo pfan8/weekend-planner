@@ -2,7 +2,7 @@ import { usePlannerStore } from "../../store/plannerStore";
 import { MapPin, Navigation, Car, Bus, Train, Footprints, Trash2, RotateCcw } from "lucide-react";
 
 export function Timeline() {
-  const { timeline, reset, selectedPlanIndex, planOptions } = usePlannerStore();
+  const { timeline, reset } = usePlannerStore();
 
   if (timeline.length === 0) {
     return (
