@@ -42,17 +42,18 @@ export interface WeekendWeatherResponse {
 
 /**
  * Get the API base URL
- * In production, use the Workers URL from environment variable
- * In development, use relative path (proxied by Vite)
+ * - In production: use relative path (proxied by Pages Functions)
+ * - In development: use relative path (proxied by Vite)
+ * - If VITE_WORKERS_URL is set: use it directly (for testing)
  */
 function getApiBaseUrl(): string {
-  // Check if we have a Workers URL configured
+  // Check if we have a Workers URL configured (for direct connection, optional)
   const workersUrl = import.meta.env.VITE_WORKERS_URL;
   if (workersUrl) {
     return workersUrl.endsWith('/') ? workersUrl.slice(0, -1) : workersUrl;
   }
   
-  // Fallback to relative path (for Pages Functions or local dev)
+  // Use relative path (proxied by Pages Functions in production, Vite in dev)
   return '';
 }
 

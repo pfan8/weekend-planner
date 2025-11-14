@@ -2,70 +2,55 @@
 
 ## 配置 Workers 后端服务
 
-### 方法 1: 使用环境变量（推荐）
+### 方法 1: 使用 Pages Functions 代理（推荐，当使用 wrangler.toml 作为配置源时）
 
-1. **在 Cloudflare Dashboard 中配置环境变量：**
-   - 进入你的 Pages 项目
-   - 进入 Settings → Environment Variables
-   - 添加环境变量：
-     - **变量名**: `VITE_WORKERS_URL`
-     - **值**: 你的 Workers URL（例如：`https://your-worker.your-subdomain.workers.dev`）
-     - **环境**: Production 和 Preview
+**重要说明：** 当你的项目使用 `wrangler.toml` 作为配置源时，Dashboard 中只能配置 Secrets（加密变量）。所有普通环境变量必须在 `wrangler.toml` 中配置。
 
-2. **重新部署 Pages：**
-   - 环境变量更改后需要重新部署才能生效
+**解决方案：** 使用 Pages Functions 代理，将 Workers URL 配置为运行时环境变量。
+
+1. **在 `wrangler.toml` 中配置 Workers URL：**
+   ```toml
+   [vars]
+   WORKERS_URL = "https://your-worker.your-subdomain.workers.dev"
+   ```
+
+2. **Pages Functions 代理已配置：**
+   - 文件 `functions/api/[...path].ts` 会自动将所有 `/api/*` 请求代理到 Workers
+   - 前端代码使用相对路径 `/api/*`，无需配置 `VITE_WORKERS_URL`
+
+3. **重新部署 Pages：**
+   - 修改 `wrangler.toml` 后需要重新部署才能生效
    - 可以触发一次新的部署
 
-### 方法 2: 使用 Pages Functions 代理（如果 Workers 和 Pages 在同一账户）
+**优势：**
+- 所有配置都在 `wrangler.toml` 中，便于版本控制
+- 不需要在 Dashboard 中配置普通环境变量
+- 支持不同环境（production/preview）使用不同的 Workers URL
 
-如果你使用 Cloudflare Pages Functions，可以创建一个代理函数：
+### 方法 2: 为不同环境配置不同的 Workers URL
 
-创建文件：`functions/api/[...path].ts`
+你可以在 `wrangler.toml` 中为不同环境配置不同的 Workers URL：
 
-```typescript
-export async function onRequest(context: {
-  request: Request;
-  env: {
-    WORKERS_URL: string;
-  };
-}) {
-  const { request, env } = context;
-  const url = new URL(request.url);
-  
-  // 获取 Workers URL
-  const workersUrl = env.WORKERS_URL || 'https://your-worker.your-subdomain.workers.dev';
-  
-  // 构建目标 URL
-  const targetUrl = `${workersUrl}${url.pathname}${url.search}`;
-  
-  // 转发请求
-  const response = await fetch(targetUrl, {
-    method: request.method,
-    headers: request.headers,
-    body: request.body,
-  });
-  
-  // 返回响应（处理 CORS）
-  return new Response(response.body, {
-    status: response.status,
-    statusText: response.statusText,
-    headers: {
-      ...Object.fromEntries(response.headers),
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
+```toml
+[vars]
+WORKERS_URL = "https://weekend-planner-agent.pfan4remote.workers.dev"
+
+[env.production]
+vars = { 
+  ENVIRONMENT = "production",
+  WORKERS_URL = "https://weekend-planner-agent.pfan4remote.workers.dev"
+}
+
+[env.preview]
+vars = { 
+  ENVIRONMENT = "preview",
+  WORKERS_URL = "https://weekend-planner-agent-preview.pfan4remote.workers.dev"
 }
 ```
 
-然后在 Cloudflare Dashboard 中设置：
-- **变量名**: `WORKERS_URL`
-- **值**: 你的 Workers URL
+### 方法 3: 直接使用 Workers URL（不推荐，需要 CORS 配置）
 
-### 方法 3: 直接使用 Workers URL（最简单）
-
-如果 Workers 已经配置了 CORS，可以直接修改代码使用 Workers URL。
+如果不想使用代理，可以直接在前端代码中使用 Workers URL。但这需要 Workers 配置 CORS，并且需要在 Dashboard 中配置 Secrets 或使用构建时环境变量。
 
 ## Workers CORS 配置
 

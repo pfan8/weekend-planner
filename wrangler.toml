@@ -2,6 +2,14 @@ name = "ai-chat"
 pages_build_output_dir = "dist"
 compatibility_date = "2024-11-08"
 
+# 注意：当使用 wrangler.toml 作为配置源时，它是 "source of truth"
+# 所有环境变量都在这里配置，Dashboard 中只能配置 Secrets（加密变量）
+
+# Pages Functions 运行时环境变量
+# 使用 Pages Functions 代理到 Workers，这样可以在 wrangler.toml 中配置
+[vars]
+WORKERS_URL = "https://weekend-planner-agent.pfan4remote.workers.dev"
+
 [env.production]
 vars = { ENVIRONMENT = "production" }
 
