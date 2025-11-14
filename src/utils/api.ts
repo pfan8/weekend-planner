@@ -41,6 +41,22 @@ export interface WeekendWeatherResponse {
 }
 
 /**
+ * Get the API base URL
+ * In production, use the Workers URL from environment variable
+ * In development, use relative path (proxied by Vite)
+ */
+function getApiBaseUrl(): string {
+  // Check if we have a Workers URL configured
+  const workersUrl = import.meta.env.VITE_WORKERS_URL;
+  if (workersUrl) {
+    return workersUrl.endsWith('/') ? workersUrl.slice(0, -1) : workersUrl;
+  }
+  
+  // Fallback to relative path (for Pages Functions or local dev)
+  return '';
+}
+
+/**
  * Send a chat request to the Cloudflare Workers API using GraphQL
  */
 export async function sendChatMessage(
@@ -56,7 +72,8 @@ export async function sendChatMessage(
       }
     `;
 
-    const response = await fetch("/api/chat", {
+    const apiBaseUrl = getApiBaseUrl();
+    const response = await fetch(`${apiBaseUrl}/api/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -103,7 +120,8 @@ export async function sendChatMessage(
  */
 export async function getWeekendWeather(city: string): Promise<WeekendWeatherResponse> {
   try {
-    const response = await fetch(`/api/weather?city=${encodeURIComponent(city)}`, {
+    const apiBaseUrl = getApiBaseUrl();
+    const response = await fetch(`${apiBaseUrl}/api/weather?city=${encodeURIComponent(city)}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
