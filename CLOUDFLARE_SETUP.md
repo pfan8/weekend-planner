@@ -2,55 +2,16 @@
 
 ## 配置 Workers 后端服务
 
-### 方法 1: 使用 Pages Functions 代理（推荐，当使用 wrangler.toml 作为配置源时）
+### 直接使用 Workers URL（当前方案）
 
-**重要说明：** 当你的项目使用 `wrangler.toml` 作为配置源时，Dashboard 中只能配置 Secrets（加密变量）。所有普通环境变量必须在 `wrangler.toml` 中配置。
+前端代码直接请求 Workers 域名：`https://weekend-planner-agent.pfan4remote.workers.dev`
 
-**解决方案：** 使用 Pages Functions 代理，将 Workers URL 配置为运行时环境变量。
+**配置说明：**
+- 前端代码已硬编码 Workers URL
+- 开发环境：使用相对路径 `/api/*`（由 Vite 代理到 `localhost:8787`）
+- 生产环境：直接请求 Workers URL
 
-1. **在 `wrangler.toml` 中配置 Workers URL：**
-   ```toml
-   [vars]
-   WORKERS_URL = "https://your-worker.your-subdomain.workers.dev"
-   ```
-
-2. **Pages Functions 代理已配置：**
-   - 文件 `functions/api/[...path].ts` 会自动将所有 `/api/*` 请求代理到 Workers
-   - 前端代码使用相对路径 `/api/*`，无需配置 `VITE_WORKERS_URL`
-
-3. **重新部署 Pages：**
-   - 修改 `wrangler.toml` 后需要重新部署才能生效
-   - 可以触发一次新的部署
-
-**优势：**
-- 所有配置都在 `wrangler.toml` 中，便于版本控制
-- 不需要在 Dashboard 中配置普通环境变量
-- 支持不同环境（production/preview）使用不同的 Workers URL
-
-### 方法 2: 为不同环境配置不同的 Workers URL
-
-你可以在 `wrangler.toml` 中为不同环境配置不同的 Workers URL：
-
-```toml
-[vars]
-WORKERS_URL = "https://weekend-planner-agent.pfan4remote.workers.dev"
-
-[env.production]
-vars = { 
-  ENVIRONMENT = "production",
-  WORKERS_URL = "https://weekend-planner-agent.pfan4remote.workers.dev"
-}
-
-[env.preview]
-vars = { 
-  ENVIRONMENT = "preview",
-  WORKERS_URL = "https://weekend-planner-agent-preview.pfan4remote.workers.dev"
-}
-```
-
-### 方法 3: 直接使用 Workers URL（不推荐，需要 CORS 配置）
-
-如果不想使用代理，可以直接在前端代码中使用 Workers URL。但这需要 Workers 配置 CORS，并且需要在 Dashboard 中配置 Secrets 或使用构建时环境变量。
+**重要：** 确保你的 Workers 已配置 CORS，允许来自 Pages 域名的请求。
 
 ## Workers CORS 配置
 

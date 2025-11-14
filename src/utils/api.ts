@@ -42,19 +42,17 @@ export interface WeekendWeatherResponse {
 
 /**
  * Get the API base URL
- * - In production: use relative path (proxied by Pages Functions)
- * - In development: use relative path (proxied by Vite)
- * - If VITE_WORKERS_URL is set: use it directly (for testing)
+ * - In production: use Workers URL directly
+ * - In development: use relative path (proxied by Vite to localhost:8787)
  */
 function getApiBaseUrl(): string {
-  // Check if we have a Workers URL configured (for direct connection, optional)
-  const workersUrl = import.meta.env.VITE_WORKERS_URL;
-  if (workersUrl) {
-    return workersUrl.endsWith('/') ? workersUrl.slice(0, -1) : workersUrl;
+  // In development, use relative path (proxied by Vite)
+  if (import.meta.env.DEV) {
+    return '';
   }
   
-  // Use relative path (proxied by Pages Functions in production, Vite in dev)
-  return '';
+  // In production, use Workers URL directly
+  return 'https://weekend-planner-agent.pfan4remote.workers.dev';
 }
 
 /**
